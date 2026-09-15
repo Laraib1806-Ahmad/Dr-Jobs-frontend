@@ -9,7 +9,7 @@ import {
   FiCopy,
   FiCheck,
 } from "react-icons/fi";
-import { HiOutlineDocumentText, HiOutlineArrowDownTray } from "react-icons/hi2";
+import { HiOutlineDocumentText } from "react-icons/hi2";
 
 export interface InvoiceItem {
   id: string;
@@ -81,7 +81,7 @@ const INITIAL_INVOICES: InvoiceItem[] = [
   },
 ];
 
-// Custom Illustrated Avatar + Cash Icon matching screenshot
+/* Payment Type Icon */
 function PaymentTypeGraphic() {
   return (
     <div className="relative inline-flex items-center justify-center w-6 h-6">
@@ -94,12 +94,13 @@ function PaymentTypeGraphic() {
         {/* Hair / Head */}
         <circle cx="12" cy="9" r="4.5" fill="#78350f" />
         <circle cx="12" cy="9.5" r="3.5" fill="#fbcfe8" />
+
         <path
           d="M8.5 8.5C8.5 6.5 10 5 12 5C14 5 15.5 6.5 15.5 8.5C15.5 9 14.5 9.5 13.5 9.5C12 9.5 11 8.5 8.5 8.5Z"
           fill="#451a03"
         />
 
-        {/* Torso / Clothes in Coral / Red */}
+        {/* Torso / Clothes */}
         <path
           d="M6 21C6 16.5 8.5 15 12 15C13.5 15 15 15.4 16 16"
           stroke="#e11d48"
@@ -107,7 +108,7 @@ function PaymentTypeGraphic() {
           strokeLinecap="round"
         />
 
-        {/* Banknote / Card with $ badge */}
+        {/* Banknote / Card */}
         <g transform="translate(11, 13)">
           <rect
             x="0"
@@ -119,7 +120,9 @@ function PaymentTypeGraphic() {
             stroke="#047857"
             strokeWidth="0.8"
           />
+
           <circle cx="6" cy="4" r="2" fill="#ecfdf5" />
+
           <text
             x="6"
             y="5.3"
@@ -137,13 +140,17 @@ function PaymentTypeGraphic() {
   );
 }
 
-function InvoiceDocIcon({ onClick }: { onClick?: () => void }) {
+/*
+ * Invoice Icon
+ * This is intentionally a button, but it has NO onClick action.
+ * Clicking it will do absolutely nothing.
+ */
+function InvoiceDocIcon() {
   return (
     <button
       type="button"
-      onClick={onClick}
       className="p-1 text-gray-400 hover:text-blue-600 transition-colors cursor-pointer rounded-sm group"
-      title="Download invoice document"
+      title="Invoice document"
     >
       <svg
         viewBox="0 0 20 20"
@@ -153,8 +160,11 @@ function InvoiceDocIcon({ onClick }: { onClick?: () => void }) {
           d="M6 3h5.5l3.5 3.5V16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"
           strokeLinejoin="round"
         />
+
         <polyline points="11 3 11 7 15 7" />
+
         <line x1="7.5" y1="10" x2="12.5" y2="10" strokeLinecap="round" />
+
         <line x1="7.5" y1="13" x2="10.5" y2="13" strokeLinecap="round" />
       </svg>
     </button>
@@ -163,25 +173,39 @@ function InvoiceDocIcon({ onClick }: { onClick?: () => void }) {
 
 export default function InvoiceHistoryTable() {
   const [searchTerm, setSearchTerm] = useState("");
+
   const [statusFilter, setStatusFilter] = useState<
     "all" | "completed" | "cancelled"
   >("all");
+
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+
   const [currentPage, setCurrentPage] = useState(1);
+
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
   const [notification, setNotification] = useState<string | null>(null);
 
   const showToast = (message: string) => {
     setNotification(message);
-    setTimeout(() => setNotification(null), 3000);
+
+    setTimeout(() => {
+      setNotification(null);
+    }, 3000);
   };
 
   const copyToClipboard = (text: string) => {
     if (text === "-") return;
+
     navigator.clipboard.writeText(text);
+
     setCopiedId(text);
+
     showToast(`Copied ${text} to clipboard!`);
-    setTimeout(() => setCopiedId(null), 2000);
+
+    setTimeout(() => {
+      setCopiedId(null);
+    }, 2000);
   };
 
   const filteredInvoices = useMemo(() => {
@@ -190,77 +214,70 @@ export default function InvoiceHistoryTable() {
       if (statusFilter !== "all" && inv.status !== statusFilter) {
         return false;
       }
+
       // Search filter
       if (searchTerm.trim() !== "") {
         const q = searchTerm.toLowerCase();
+
         const matchId = inv.invoiceId.toLowerCase().includes(q);
         const matchProduct = inv.product.toLowerCase().includes(q);
         const matchDate = inv.date.toLowerCase().includes(q);
         const matchAmount = inv.amount.toLowerCase().includes(q);
+
         return matchId || matchProduct || matchDate || matchAmount;
       }
+
       return true;
     });
   }, [searchTerm, statusFilter]);
 
-  const handleDownloadAll = () => {
-    const dataStr =
-      "data:text/json;charset=utf-8," +
-      encodeURIComponent(JSON.stringify(filteredInvoices, null, 2));
-    const downloadAnchor = document.createElement("a");
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", "drjob-invoices-2026.json");
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
-    showToast("Downloaded all invoices (JSON export)");
-  };
-
-  const handleDownloadSingle = (inv: InvoiceItem) => {
-    showToast(
-      `Downloading invoice for ${inv.product !== "-" ? inv.product : inv.date} (${inv.amount})`,
-    );
-  };
-
   return (
     <div className="bg-white rounded-2xl border border-gray-100/90 shadow-[0_1px_3px_rgba(0,0,0,0.03)] p-6 relative">
-      {/* Optional Toast Notification */}
+      {/* Toast Notification */}
       {notification && (
         <div className="absolute top-4 right-6 bg-gray-900 text-white text-xs px-3.5 py-2 rounded-xl shadow-lg z-50 animate-fade-in flex items-center gap-2">
           <FiCheck className="text-emerald-400" />
+
           <span>{notification}</span>
         </div>
       )}
 
-      {/* Header with Icon, Title, and Action Controls */}
+      {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4">
         {/* Left: Icon & Title */}
         <div className="flex items-center gap-3.5">
           <div className="w-11 h-11 rounded-xl bg-[#eef4ff] text-[#3b82f6] flex items-center justify-center shrink-0">
             <HiOutlineDocumentText className="text-xl stroke-[1.8]" />
           </div>
+
           <div>
             <h2 className="text-base font-bold text-gray-900 tracking-tight leading-tight">
               Invoice History
             </h2>
+
             <p className="text-xs text-gray-400 font-normal mt-0.5">
               Review past payments, download invoices and track billing status.
             </p>
           </div>
         </div>
 
-        {/* Right: Search, Filter, Download All */}
+        {/* Right: Search + Filter */}
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Search Input */}
           <div className="relative">
             <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+
             <input
               type="text"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
               placeholder="Search invoice ID"
               className="pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg text-gray-800 placeholder-gray-400 w-52 sm:w-60 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all bg-white"
             />
+
             {searchTerm && (
               <button
                 type="button"
@@ -282,6 +299,7 @@ export default function InvoiceHistoryTable() {
               <span className="capitalize">
                 {statusFilter === "all" ? "All status" : statusFilter}
               </span>
+
               <FiChevronDown
                 className={`text-gray-400 text-xs transition-transform duration-150 ${
                   statusDropdownOpen ? "rotate-180" : ""
@@ -291,11 +309,13 @@ export default function InvoiceHistoryTable() {
 
             {statusDropdownOpen && (
               <div className="absolute right-0 mt-1 w-32 bg-white border border-gray-100 rounded-lg shadow-lg py-1 z-30">
+                {/* All Status */}
                 <button
                   type="button"
                   onClick={() => {
                     setStatusFilter("all");
                     setStatusDropdownOpen(false);
+                    setCurrentPage(1);
                   }}
                   className={`w-full px-3 py-1.5 text-xs text-left hover:bg-gray-50 cursor-pointer flex items-center justify-between ${
                     statusFilter === "all"
@@ -308,11 +328,14 @@ export default function InvoiceHistoryTable() {
                     <FiCheck className="text-blue-600 text-xs" />
                   )}
                 </button>
+
+                {/* Completed */}
                 <button
                   type="button"
                   onClick={() => {
                     setStatusFilter("completed");
                     setStatusDropdownOpen(false);
+                    setCurrentPage(1);
                   }}
                   className={`w-full px-3 py-1.5 text-xs text-left hover:bg-gray-50 cursor-pointer flex items-center justify-between ${
                     statusFilter === "completed"
@@ -325,11 +348,14 @@ export default function InvoiceHistoryTable() {
                     <FiCheck className="text-emerald-600 text-xs" />
                   )}
                 </button>
+
+                {/* Cancelled */}
                 <button
                   type="button"
                   onClick={() => {
                     setStatusFilter("cancelled");
                     setStatusDropdownOpen(false);
+                    setCurrentPage(1);
                   }}
                   className={`w-full px-3 py-1.5 text-xs text-left hover:bg-gray-50 cursor-pointer flex items-center justify-between ${
                     statusFilter === "cancelled"
@@ -345,16 +371,6 @@ export default function InvoiceHistoryTable() {
               </div>
             )}
           </div>
-
-          {/* Download all button */}
-          <button
-            type="button"
-            onClick={handleDownloadAll}
-            className="border border-[#2563eb] hover:bg-blue-50/70 text-[#2563eb] px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-          >
-            <HiOutlineArrowDownTray className="text-sm stroke-[2]" />
-            <span>Download all</span>
-          </button>
         </div>
       </div>
 
@@ -374,6 +390,7 @@ export default function InvoiceHistoryTable() {
               <th className="py-3 px-2 font-medium text-center">Invoice</th>
             </tr>
           </thead>
+
           <tbody className="divide-y divide-gray-50 text-xs text-gray-700">
             {filteredInvoices.length === 0 ? (
               <tr>
@@ -401,6 +418,7 @@ export default function InvoiceHistoryTable() {
                         >
                           {inv.invoiceId}
                         </span>
+
                         <button
                           type="button"
                           onClick={() => copyToClipboard(inv.invoiceId)}
@@ -419,7 +437,7 @@ export default function InvoiceHistoryTable() {
                     )}
                   </td>
 
-                  {/* Date (GMT+4) */}
+                  {/* Date */}
                   <td className="py-4 px-2 whitespace-nowrap text-gray-700">
                     {inv.date}
                   </td>
@@ -433,12 +451,12 @@ export default function InvoiceHistoryTable() {
                     )}
                   </td>
 
-                  {/* Transaction amount */}
+                  {/* Transaction Amount */}
                   <td className="py-4 px-2 whitespace-nowrap text-gray-800">
                     {inv.amount}
                   </td>
 
-                  {/* Tax amount */}
+                  {/* Tax Amount */}
                   <td className="py-4 px-2 whitespace-nowrap text-gray-800">
                     {inv.tax}
                   </td>
@@ -475,9 +493,7 @@ export default function InvoiceHistoryTable() {
                   {/* Invoice */}
                   <td className="py-4 px-2 whitespace-nowrap text-center">
                     {inv.hasInvoiceFile ? (
-                      <InvoiceDocIcon
-                        onClick={() => handleDownloadSingle(inv)}
-                      />
+                      <InvoiceDocIcon />
                     ) : (
                       <span className="text-gray-400 font-normal">-</span>
                     )}
@@ -489,13 +505,13 @@ export default function InvoiceHistoryTable() {
         </table>
       </div>
 
-      {/* Table Footer: Pagination */}
+      {/* Table Footer */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-6 border-t border-gray-100 mt-2">
         <span className="text-xs text-gray-400 font-normal">
           Showing {filteredInvoices.length} invoices
         </span>
 
-        {/* Pagination Buttons */}
+        {/* Pagination */}
         <div className="flex items-center gap-1.5 self-end sm:self-auto">
           <button
             type="button"
