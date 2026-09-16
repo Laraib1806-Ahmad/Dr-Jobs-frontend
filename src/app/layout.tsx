@@ -14,7 +14,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Billing - Dr.Job",
-  description: "Manage your billing information, payment method and view your invoices.",
+  description:
+    "Manage your billing information, payment method and view your invoices.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

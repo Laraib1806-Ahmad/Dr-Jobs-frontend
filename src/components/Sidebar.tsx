@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FiCreditCard, FiSettings } from "react-icons/fi";
+import { FiCreditCard, FiSearch, FiSettings } from "react-icons/fi";
 
 interface SidebarProps {
   activeItem?: string;
@@ -18,6 +18,7 @@ export default function Sidebar({
 
   const navItems = [
     { name: "Billing", icon: FiCreditCard, href: "/billing" },
+    { name: "Candidate Search", icon: FiSearch, href: "/candidate-search" },
     { name: "Settings", icon: FiSettings, href: "/settings" },
   ];
 
